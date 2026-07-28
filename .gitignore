@@ -1,0 +1,60 @@
+# OS Generated Files
+.DS_Store
+Thumbs.db
+_profile/
+_profile*/
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment Variables
+.env
+.env.local
+.env.production
+.env.development
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Node modules (just in case they appear in root)
+node_modules/
+.pnpm-store/
+
+# Build outputs (if any in root)
+dist/
+build/
+**/backend/build/
+
+# Submodule directories are tracked by commit hash, so their content IS ignored by the root repo
+# but the directories themselves must NOT be ignored.
+# (standard git behavior is fine)
+
+# Internal tools/artifacts
+implementation_plan.md
+task.md
+walkthrough.md
+graphify-out/
+.claude-flow/
+.claude/
+.swarm/
+.playwright-mcp/
+projects/infra/
+.pub-cache/
+**/.dart_tool/
+**/build/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.flutter-link
+**/venv/
+**/.venv/
+**/__pycache__/
+
+# Go cache and builds
+**/.go_cache/
+projects/glycocalyx/glycocalyx
