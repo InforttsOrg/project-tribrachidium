@@ -1,10 +1,10 @@
-#!/bin/zsh
+#!/bin/bash
 
 # 🧬 Project Tribrachidium Local Dev Orchestrator
 # This script orchestrates the local running of the Tribrachidium Design System Registry.
 
 CWD=$(pwd)
-PROJECT_DIR="/Users/admin/rttss-sahil/inforttsOrg/projects/tribrachidium"
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "🧬 Initializing Tribrachidium Swarm Orchestrator..."
 
@@ -36,7 +36,7 @@ case "$1" in
 
   "dev" | "")
     echo "🛰️ Starting full Tribrachidium application stack..."
-    echo "Launced Tribrachidium design registry. Listening on Port 8045..."
+    echo "Launched Tribrachidium design registry. Listening on Port 8045..."
     exit 0
     ;;
 
