@@ -58,3 +58,34 @@ projects/infra/
 # Go cache and builds
 **/.go_cache/
 projects/glycocalyx/glycocalyx
+
+# ===== Android / Flutter signing + local machine state =====
+# These must NEVER be committed: they carry the release keystore password and the
+# developer's absolute SDK paths. A past `git add -A` published
+# mobile/android/key.properties (storePassword/keyPassword) to origin/main, so they are
+# now ignored at any depth and asserted absent by validate-release.sh.
+**/key.properties
+**/local.properties
+**/*.jks
+**/*.keystore
+**/*.p12
+**/*.pem
+**/.metadata
+
+# ===== Broken mobile/ husks =====
+# The Flutter app was dropped by the repo conversion and only its build leftovers
+# survived (no pubspec.yaml, no lib/, and a gradlew with no gradle-wrapper.properties).
+# It can never build, and it is where the committed signing secret lived. The product
+# Tribrachidium ships is the design-system registry, not an Android app, so the husk is
+# gitignored instead of tracked; delete the local copy, do not re-add it.
+mobile/
+android/
+
+# ===== Gradle / IDE build caches =====
+**/.gradle/
+*.iml
+
+# ===== CI-generated release artifacts =====
+# ota-release.json is written at repo root by ci/jenkins-common.groovy otaBump()
+ota-release.json
+*.pyc
