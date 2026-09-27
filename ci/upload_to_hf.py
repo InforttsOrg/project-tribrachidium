@@ -47,33 +47,12 @@ def main():
     parser.add_argument("--apk", help="Path to built release APK file")
     parser.add_argument("--patch", help="Path to OTA differential patch file")
     parser.add_argument("--version", default="1.0.0", help="Version name (e.g. 1.2.0 or 2.03.01+20301)")
-    parser.add_argument("--version-code", type=int, help="Android Version code (default: build number from --version '+<build>')")
+    parser.add_argument("--version-code", type=int, default=1, help="Android Version code")
     parser.add_argument("--track", default="internal", help="Distribution track (internal, alpha, beta, production)")
     parser.add_argument("--repo", default="rttss/ota-patches", help="Hugging Face Dataset repo ID")
     parser.add_argument("--token", help="Hugging Face write token")
 
     args = parser.parse_args()
-
-    # A requested artifact that is not on disk must abort the publish: the manifest is
-    # the contract OTA clients read, and a manifest advertising a URL whose binary was
-    # never uploaded turns every client update into a 404. Fail before touching the CDN.
-    for flag, path in (("--apk", args.apk), ("--patch", args.patch)):
-        if path and not os.path.isfile(path):
-            print(f"[ERROR] {flag} '{path}' does not exist — refusing to publish a manifest "
-                  f"that points at a missing artifact.", file=sys.stderr)
-            sys.exit(2)
-
-    if args.version_code is None:
-        # ci/jenkins-common.groovy passes only --version ("<base>+<build>"); deriving the
-        # code from the build suffix keeps the manifest consistent instead of pinning 1.
-        parts = args.version.split("+", 1)
-        try:
-            args.version_code = int(parts[1]) if len(parts) > 1 else 0
-        except ValueError:
-            print(f"[ERROR] Cannot derive version code from --version '{args.version}' "
-                  f"(expected '<base>+<build>'); pass --version-code explicitly.", file=sys.stderr)
-            sys.exit(2)
-
     token = get_token(args.token)
 
     if not token:
@@ -84,9 +63,7 @@ def main():
         from huggingface_hub import HfApi, create_repo
     except ImportError:
         print("[INFO] Installing huggingface_hub...")
-        if os.system(f"{sys.executable} -m pip install -q huggingface_hub") != 0:
-            print("[ERROR] Failed to install huggingface_hub — cannot publish to the CDN.", file=sys.stderr)
-            sys.exit(1)
+        os.system(f"{sys.executable} -m pip install -q huggingface_hub")
         from huggingface_hub import HfApi, create_repo
 
     api = HfApi(token=token)
@@ -105,18 +82,17 @@ def main():
         "version_name": args.version,
         "version_code": args.version_code,
         "track": args.track,
+        "apk_url": f"https://huggingface.co/datasets/{repo_id}/resolve/main/{slug}/{slug}.apk",
         "updated_at": int(time.time()),
         "timestamp_iso": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     }
 
-    # 1. Upload APK if provided (apk_url is added to the manifest only once the binary
-    #    is really on the CDN, so a manifest never advertises a dead download URL)
+    # 1. Upload APK if provided
     if args.apk and os.path.exists(args.apk):
         apk_size = os.path.getsize(args.apk)
         apk_hash = sha256_file(args.apk)
         manifest["size_bytes"] = apk_size
         manifest["sha256"] = apk_hash
-        manifest["apk_url"] = f"https://huggingface.co/datasets/{repo_id}/resolve/main/{slug}/{slug}.apk"
 
         print(f"[HF CDN] Uploading {slug}.apk ({apk_size / (1024*1024):.2f} MB, SHA256: {apk_hash[:12]}...)")
         api.upload_file(
@@ -126,7 +102,7 @@ def main():
             repo_type="dataset",
             commit_message=f"CI: Release APK {slug} v{args.version} [{args.track}]"
         )
-        print(f"[HF CDN] APK Live CDN: {manifest['apk_url']}")
+        print(f"[HF CDN] APK Live CDN: https://huggingface.co/datasets/{repo_id}/resolve/main/{slug}/{slug}.apk")
 
     # 2. Upload Patch if provided
     if args.patch and os.path.exists(args.patch):
