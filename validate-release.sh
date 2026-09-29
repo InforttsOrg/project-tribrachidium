@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/bin/zsh
 
 # 🧬 Project Tribrachidium Release Validation Gatekeeper
 # Verifies that CSS schemas, tokens, and files are valid and bumps version.
 
-PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="/Users/admin/rttss-sahil/inforttsOrg/projects/tribrachidium"
 VERSION_FILE="$PROJECT_DIR/.version"
 
 echo "🧬 Launching Tribrachidium Validation Gatekeeper..."
