@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 
 # 🧬 Project Tribrachidium Release Validation Gatekeeper
 # Verifies the design-token registry scaffolding, then bumps the patch version.
@@ -6,8 +6,8 @@
 # printed once all of them passed, and a missing tool or asset is reported, never
 # assumed to be fine.
 
-PROJECT_DIR="/Users/admin/rttss-sahil/inforttsOrg/projects/tribrachidium"
-VERSION_FILE="$PROJECT_DIR/.version"
+PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$PROJECT_DIR" || exit 1
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
