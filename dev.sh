@@ -38,10 +38,10 @@ case "$1" in
     # huggingface_hub on demand at first publish. Report the real result instead of
     # claiming success unconditionally.
     if command -v python3 >/dev/null 2>&1; then
-        if [ ! -f requirements.txt ]; then
-            echo -e "${YELLOW}⚠️  No requirements.txt in this repo yet — using system Python packages.${NC}"
-        elif python3 -m pip install -q -r requirements.txt; then
-            echo -e "${GREEN}✓ Dependencies installed from requirements.txt.${NC}"
+        if [ ! -f ci/requirements.txt ]; then
+            echo -e "${YELLOW}⚠️  No ci/requirements.txt in this repo yet — using system Python packages.${NC}"
+        elif python3 -m pip install -q -r ci/requirements.txt; then
+            echo -e "${GREEN}✓ Dependencies installed from ci/requirements.txt.${NC}"
         else
             echo -e "${RED}❌ Dependency installation failed — see pip output above.${NC}"
             exit 1

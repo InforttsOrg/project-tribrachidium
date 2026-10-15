@@ -66,6 +66,8 @@ projects/glycocalyx/glycocalyx
 # now ignored at any depth and asserted absent by validate-release.sh.
 **/key.properties
 **/local.properties
+**/google-services.json
+**/GoogleService-Info.plist
 **/*.jks
 **/*.keystore
 **/*.p12
@@ -89,3 +91,4 @@ android/
 # ota-release.json is written at repo root by ci/jenkins-common.groovy otaBump()
 ota-release.json
 *.pyc
+!.env.example

@@ -107,10 +107,10 @@ else
     warn "no Jenkinsfile in repo — CI wiring check skipped."
 fi
 
-# 5. Secret hygiene. A previous `git add -A` published mobile/android/key.properties
-#    (real storePassword/keyPassword) to origin/main, so the guard is permanent: no
-#    signing or local-machine file may ever be tracked again.
-tracked_secrets=$(git ls-files 2>/dev/null | grep -E '(^|/)(key\.properties|local\.properties|.*\.(jks|keystore|p12|pem))$' || true)
+# 5. Secret hygiene. Hardened tracked-secret guard: blocks env variants, signing keys,
+#    Firebase/Google service files and keystores; allows .env.example. A previous
+#    leak (key.properties) makes this a permanent hard failure.
+tracked_secrets=$(git ls-files 2>/dev/null | grep -E '(^|/)(key\.properties|local\.properties|google-services\.json|GoogleService-Info\.plist)$|(^|/)\.env(\.local|\.production|\.development)?$|\.(jks|keystore|p12|pem)$' || true)
 if [ -n "$tracked_secrets" ]; then
     fail "tracked credential/machine-local file(s) must never be committed: $(printf '%s' "$tracked_secrets" | tr '\n' ' ')"
 else
@@ -216,8 +216,13 @@ with tempfile.TemporaryDirectory() as td:
     env["HOME"] = td
     base = [sys.executable, path, "--slug", "tribrachidium", "--version", "1.0.1+10001"]
 
+    # A dummy artifact exists on disk so the fail-closed checks below reach the
+    # credential/version-code guards instead of tripping the missing-artifact guard.
+    dummy = os.path.join(td, "tribrachidium.apk")
+    open(dummy, "wb").write(b"dummy")
+
     # No credentials available -> refuse to publish rather than 500 halfway through.
-    rc = subprocess.run(base, env=env, capture_output=True, text=True).returncode
+    rc = subprocess.run(base + ["--apk", dummy], env=env, capture_output=True, text=True).returncode
     if rc != 1:
         print(f"❌ uploader exited {rc} with no HF token (expected 1)", file=sys.stderr)
         sys.exit(1)
@@ -231,6 +236,14 @@ with tempfile.TemporaryDirectory() as td:
         print(f"❌ uploader exited {rc} for a missing --apk (expected 2)", file=sys.stderr)
         sys.exit(1)
     print("✅ uploader refuses to publish a manifest for a missing artifact (exit 2)")
+
+    # A publish with no artifact at all would overwrite the live CDN manifest and strip
+    # the apk_url/sha256 installed clients download from — must abort, not no-op.
+    rc = subprocess.run(base + ["--token", "fake"], env=env, capture_output=True, text=True).returncode
+    if rc != 2:
+        print(f"❌ uploader exited {rc} with no artifact (expected 2)", file=sys.stderr)
+        sys.exit(1)
+    print("✅ uploader refuses an artifact-less manifest publish (exit 2)")
 PY_UPLOADER
     if [ $? -eq 0 ]; then
         ok "HF CDN uploader contract verified"
